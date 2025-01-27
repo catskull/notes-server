@@ -16,7 +16,7 @@ export default {
 		const link = body.link.split('\n')[0];
 
 		// it makes the yaml
-		const yaml =`- note: ${body.note}
+		const yaml =`- note: "${body.note}"
   link: "${link}"
   date: ${new Date().toLocaleDateString()}
 
