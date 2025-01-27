@@ -20,7 +20,7 @@ export default {
   link: "${link}"
   date: ${new Date().toLocaleDateString()}
 
-  `
+`
 		// it configures the configurations
   const repo = {
     owner: 'catskull',
