@@ -3,6 +3,17 @@ import { Octokit, App } from "octokit";
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
+    const utf8ToBase64Modern = (str) => {
+      let bytes = new TextEncoder().encode(str);
+      let binary = String.fromCharCode(...bytes);
+      return btoa(binary);
+    }
+
+    const base64ToUtf8Modern = (str) => {
+      let binary = atob(str);
+      let bytes = new Uint8Array([...binary].map(c => c.charCodeAt(0)));
+      return new TextDecoder().decode(bytes);
+    }
 
 		// it authenticates the request
 		if (env.KEY !== request.headers.get('key')) {
@@ -36,20 +47,20 @@ export default {
 
 		// it gets the file
   let file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {...repo})
-  let content = atob(file?.data?.content ?? '');
+  let content = base64ToUtf8Modern(file?.data?.content ?? '');
 
 		// it rubs the yaml on it's skin
   const update = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}',
   {
    ...repo,
    message: `New note: ${link}`,
-   content: btoa(yaml + content),
+   content: utf8ToBase64Modern(yaml + content),
    sha: file.data.sha,
  })
 
     // it gets the updated file
   file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {...repo})
-  content = atob(file?.data?.content ?? '');
+  content = base64ToUtf8Modern(file?.data?.content ?? '');
 
 		// it shows us the updated file
   return new Response(content);
