@@ -29,7 +29,17 @@ export default {
 		// it makes the yaml
     let yaml
 		if (body.wiki) {
+      const wikislug = link.split('https://en.wikipedia.org/wiki/')[1]
+      const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wikislug}`)
+      const json = await r.json()
+
       yaml =`- url: ${link}
+  created: '${new Date().toISOString().split('.')[0] + 'Z'}'
+  title: ${json.title}
+  image_url: ${json?.thumbnail?.source ?? ''}
+  image_wh: ${json.thumbnail ? [json.thumbnail.width, json.thumbnail.height].join('x') : ''}
+  description: ${json.description}
+  extract: ${json.extract}
 `
     } else {
       yaml =`- note: "${body.note}"
@@ -38,39 +48,38 @@ export default {
 
 `
     }
+
 		// it configures the configurations
-
-
-  const repo = {
-    owner: 'catskull',
-    repo: 'catskull.github.io',
-    path: body.wiki ? '_data/wiki.yml' : '_data/notes.yml',
-    headers: {
-      'X-GitHub-Api-Version': '2022-11-28'
+    const repo = {
+      owner: 'catskull',
+      repo: 'catskull.github.io',
+      path: body.wiki ? '_data/wiki.yml' : '_data/notes.yml',
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
     }
-  }
-  const octokit = new Octokit({
-   auth: env.TOKEN
- })
+    const octokit = new Octokit({
+      auth: env.TOKEN
+    })
 
-		// it gets the file
-  let file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {...repo})
-  let content = base64ToUtf8Modern(file?.data?.content ?? '');
+  		// it gets the file
+    let file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {...repo})
+    let content = base64ToUtf8Modern(file?.data?.content ?? '');
 
-		// it rubs the yaml on it's skin
-  const update = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}',
-  {
-   ...repo,
-   message: body.wiki ? `New wiki: ${link}` : `New note: ${link}`,
-   content: body.wiki ? utf8ToBase64Modern(content + yaml) : utf8ToBase64Modern(yaml + content),
-   sha: file.data.sha,
- })
+  		// it rubs the yaml on it's skin
+    const update = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}',
+    {
+      ...repo,
+      message: body.wiki ? `New wiki: ${link}` : `New note: ${link}`,
+      content: body.wiki ? utf8ToBase64Modern(content + yaml) : utf8ToBase64Modern(yaml + content),
+      sha: file.data.sha,
+    })
 
-    // it gets the updated file
-  file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {...repo})
-  content = base64ToUtf8Modern(file?.data?.content ?? '');
+      // it gets the updated file
+    file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {...repo})
+    content = base64ToUtf8Modern(file?.data?.content ?? '');
 
-		// it shows us the updated file
-  return new Response(content);
+  		// it shows us the updated file
+    return new Response(content);
 },
 } satisfies ExportedHandler<Env>;
