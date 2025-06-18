@@ -27,16 +27,24 @@ export default {
 		const link = body.link.split('\n')[0];
 
 		// it makes the yaml
-		const yaml =`- note: "${body.note}"
+    let yaml
+		if (body.wiki) {
+      yaml =`- url: ${link}
+`
+    } else {
+      yaml =`- note: "${body.note}"
   link: "${link}"
   date: ${new Date().toLocaleDateString()}
 
 `
+    }
 		// it configures the configurations
+
+
   const repo = {
     owner: 'catskull',
     repo: 'catskull.github.io',
-    path: '_data/notes.yml',
+    path: body.wiki ? '_data/wiki.yml' : '_data/notes.yml',
     headers: {
       'X-GitHub-Api-Version': '2022-11-28'
     }
@@ -53,8 +61,8 @@ export default {
   const update = await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}',
   {
    ...repo,
-   message: `New note: ${link}`,
-   content: utf8ToBase64Modern(yaml + content),
+   message: body.wiki ? `New wiki: ${link}` : `New note: ${link}`,
+   content: body.wiki ? utf8ToBase64Modern(content + yaml) : utf8ToBase64Modern(yaml + content),
    sha: file.data.sha,
  })
 
