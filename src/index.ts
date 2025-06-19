@@ -35,11 +35,13 @@ export default {
 
       yaml =`- url: ${link}
   created: '${new Date().toISOString().split('.')[0] + 'Z'}'
-  title: ${json.title}
+  title: '${json.title}'
   image_url: ${json?.thumbnail?.source ?? ''}
   image_wh: ${json.thumbnail ? [json.thumbnail.width, json.thumbnail.height].join('x') : ''}
-  description: ${json.description}
-  extract: ${json.extract}
+  description: |
+    ${json.description}
+  extract: |
+    ${json.extract}
 `
     } else {
       yaml =`- note: "${body.note}"
