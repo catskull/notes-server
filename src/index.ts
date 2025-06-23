@@ -35,12 +35,13 @@ export default {
 
       yaml =`- url: ${link}
   created: '${new Date().toISOString().split('.')[0] + 'Z'}'
-  title: '${json.title}'
+  title: |
+    ${json.title}
   image_url: ${json?.thumbnail?.source ?? ''}
   image_wh: ${json.thumbnail ? [json.thumbnail.width, json.thumbnail.height].join('x') : ''}
   description: '${json.description}'
   extract: |
-    ${json.extract}
+    ${json.extract.split('\n').map(line => '    ' + line).join('\n')}
 `
     } else {
       yaml =`- note: "${body.note}"
@@ -49,12 +50,12 @@ export default {
 
 `
     }
-
+    
 		// it configures the configurations
     const repo = {
       owner: 'catskull',
       repo: 'catskull.github.io',
-      path: body.wiki ? '_data/wiki.yml' : '_data/notes.yml',
+      path: body.wiki ? `_data/wiki/${new Date().toISOString().split('T')[0]}.yml` : '_data/notes.yml',
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       }
@@ -64,7 +65,13 @@ export default {
     })
 
   		// it gets the file
-    let file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {...repo})
+    let file;
+    try {
+      file = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {...repo})
+    } catch {
+      console.log(`Creating new file ${repo.path}`)
+
+    }
     let content = base64ToUtf8Modern(file?.data?.content ?? '');
 
   		// it rubs the yaml on it's skin
@@ -73,7 +80,7 @@ export default {
       ...repo,
       message: body.wiki ? `New wiki: ${link}` : `New note: ${link}`,
       content: body.wiki ? utf8ToBase64Modern(content + yaml) : utf8ToBase64Modern(yaml + content),
-      sha: file.data.sha,
+      sha: file?.data?.sha,
     })
 
       // it gets the updated file
