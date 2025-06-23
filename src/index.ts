@@ -39,9 +39,10 @@ export default {
     ${json.title}
   image_url: ${json?.thumbnail?.source ?? ''}
   image_wh: ${json.thumbnail ? [json.thumbnail.width, json.thumbnail.height].join('x') : ''}
-  description: '${json.description}'
+  description: |
+    ${json.description}
   extract: |
-    ${json.extract.split('\n').map(line => '    ' + line).join('\n')}
+${json.extract.split('\n').map(line => '    ' + line).join('\n')}
 `
     } else {
       yaml =`- note: "${body.note}"
