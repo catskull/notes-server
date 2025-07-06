@@ -29,6 +29,7 @@ export default {
 		// it makes the yaml
     let yaml
 		if (body.wiki) {
+      if (!link.includes('wikipedia.org')) throw new Error("You just wiki'ed a non-wiki link you dingle berry!");
       const wikislug = link.split('https://en.wikipedia.org/wiki/')[1]
       const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${wikislug}`)
       const json = await r.json()
